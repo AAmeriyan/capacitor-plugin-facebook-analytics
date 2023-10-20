@@ -21,21 +21,21 @@ public class FacebookAnalytics: CAPPlugin {
 
         if let valueToSum = call.getDouble("valueToSum") {
             if let params = call.getObject("params") {
-                AppEvents.logEvent(.init(event), valueToSum: valueToSum, parameters: params)
+                AppEvents.shared.logEvent(.init(event), valueToSum: valueToSum, parameters: params as? [AppEvents.ParameterName: Any])
             } else {
-                AppEvents.logEvent(.init(event), valueToSum: valueToSum)
+                AppEvents.shared.logEvent(.init(event), valueToSum: valueToSum)
             }
             
         } else {
             if let params = call.getObject("params") {
-                AppEvents.logEvent(.init(event), parameters: params)
+                AppEvents.shared.logEvent(.init(event), parameters: params as? [AppEvents.ParameterName: Any])
             } else {
-                AppEvents.logEvent(.init(event))
+                AppEvents.shared.logEvent(.init(event))
             }
         }
         
 
-        call.success()
+        call.resolve()
     }
 
     @objc func logPurchase(_ call: CAPPluginCall) {
@@ -48,9 +48,9 @@ public class FacebookAnalytics: CAPPlugin {
         let currency = call.getString("currency") ?? "USD"
         let params = call.getObject("params") ?? [String:String]()
         
-        AppEvents.logPurchase(amount, currency: currency, parameters: params)
+        AppEvents.shared.logPurchase(amount: amount, currency: currency, parameters: params as? [AppEvents.ParameterName: Any])
 
-        call.success()
+        call.resolve()
     }
 
     @objc func logAddPaymentInfo(_ call: CAPPluginCall) {
@@ -59,9 +59,9 @@ public class FacebookAnalytics: CAPPlugin {
         let success = call.getInt("success") ?? 0
     
 
-        AppEvents.logEvent(.addedPaymentInfo, parameters: ["success": success])
+        AppEvents.shared.logEvent(.addedPaymentInfo, parameters: [AppEvents.ParameterName.success: success])
 
-        call.success()
+        call.resolve()
     }
 
     @objc func logAddToCart(_ call: CAPPluginCall) {
@@ -73,23 +73,24 @@ public class FacebookAnalytics: CAPPlugin {
         }
         let currency = call.getString("currency") ?? "USD"
 
-        var params = call.getObject("params") ?? [String: String]()
+        var params = call.getObject("params") as? [AppEvents.ParameterName: Any]
         
-        params[AppEvents.ParameterName.currency.rawValue] = currency
+        params?[AppEvents.ParameterName.currency] = currency
+        
+        
+        AppEvents.shared.logEvent(.addedToCart, valueToSum: amount, parameters: params)
 
-        AppEvents.logEvent(.addedToCart, valueToSum: amount, parameters: params)
-
-        call.success()
+        call.resolve()
     }
     
     @objc func logCompleteRegistration(_ call: CAPPluginCall) {
         print("logging logCompleteRegistration")
 
-        let parameters = call.getObject("params") ?? [String: String]()
+        let parameters = call.getObject("params") as? [AppEvents.ParameterName: Any]
 
-        AppEvents.logEvent(.completedRegistration, parameters: parameters)
+        AppEvents.shared.logEvent(.completedRegistration, parameters: parameters)
 
-        call.success()
+        call.resolve()
     }
     @objc func logInitiatedCheckout(_ call: CAPPluginCall) {
         print("logging logInitiatedCheckout")
@@ -98,10 +99,10 @@ public class FacebookAnalytics: CAPPlugin {
             return;
         }        
         
-        let parameters = call.getObject("params") ?? ["default": "default"]
+        let parameters = call.getObject("params") as? [AppEvents.ParameterName: Any]
 
-        AppEvents.logEvent(.initiatedCheckout, valueToSum: amount, parameters: parameters)
+        AppEvents.shared.logEvent(.initiatedCheckout, valueToSum: amount, parameters: parameters)
 
-        call.success()
+        call.resolve()
     }
 }
